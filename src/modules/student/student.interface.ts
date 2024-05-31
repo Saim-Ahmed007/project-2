@@ -1,4 +1,4 @@
-import { Schema, model, connect } from 'mongoose';
+import { Types } from 'mongoose';
 
 export type Gurdian = {
   fatherName: string;
@@ -13,12 +13,13 @@ export type UserName = {
   middleName?: string;
   lastName: string;
 };
-export type Student = {
+export type TStudent = {
   id: string;
+  user : Types.ObjectId;
   name: UserName;
   gender: 'male' | 'female' | 'other';
   email: string;
-  dateOfBirth?: string;
+  dateOfBirth?: Date;
   contactNo: string;
   emergencyContactNo: string;
   bloodGroup: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
@@ -26,6 +27,6 @@ export type Student = {
   permanentAddress: string;
   gurdian: Gurdian;
   profileImage?: string;
-  isActive: 'active' | 'blocked';
-  isDeleted : boolean;
+  isDeleted: boolean;
+  admissionSemester : Types.ObjectId;
 };

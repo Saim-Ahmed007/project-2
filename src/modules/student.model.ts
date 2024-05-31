@@ -1,5 +1,5 @@
 import { Schema, model, connect } from 'mongoose';
-import { Gurdian, Student, UserName } from './student/student.interface';
+import { Gurdian, TStudent, UserName } from './student/student.interface';
 import validator from 'validator';
 
 const userNameSchema = new Schema<UserName>({
@@ -24,7 +24,7 @@ const userNameSchema = new Schema<UserName>({
     // validate : {
     //   validator : (value:string) => validator.isAlpha(value),
     //   message : '{VALUE} is not valid'
-      
+
     // }
   },
 });
@@ -38,64 +38,74 @@ const gurdianSchema = new Schema<Gurdian>({
   motherContactNo: { type: String, required: true },
 });
 
-const studentSchema = new Schema<Student>({
-  id: { type: String , required: true, unique: true},
-  name: {
-    type : userNameSchema,
-    required : [true,'name is required']
-  },
-  gender: {
-    type:String,
-    enum : {
-      values : ['male', 'female', 'other'],
-      message : '{VALUE} is not supported'
+const studentSchema = new Schema<TStudent>(
+  {
+    id: { type: String, required: true, unique: true },
+    user : {
+      type: Schema.Types.ObjectId,
+      required: [true, 'user ID is required'],
+      unique: true,
+      ref: 'User'
     },
-    required : true
-  },
-  email: { type: String, required: true , unique: true,
-        // validate : {
-        //   validator: (value:string) => validator.isEmail(value),
-        //   message : '{VALUE} is not valid email'
-        // }
-  },
-  dateOfBirth: { type: String },
-  contactNo: { type: String, required: true },
-  emergencyContactNo: { type: String },
-  bloodGroup: {
-    type : String,
-    enum : {
-      values : ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
-      message : '{VALUES} is not supported'
+    name: {
+      type: userNameSchema,
+      required: [true, 'name is required'],
+    },
+    gender: {
+      type: String,
+      enum: {
+        values: ['male', 'female', 'other'],
+        message: '{VALUE} is not supported',
+      },
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      // validate : {
+      //   validator: (value:string) => validator.isEmail(value),
+      //   message : '{VALUE} is not valid email'
+      // }
+    },
+    dateOfBirth: { type: Date },
+    contactNo: { type: String, required: true },
+    emergencyContactNo: { type: String },
+    bloodGroup: {
+      type: String,
+      enum: {
+        values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+        message: '{VALUES} is not supported',
+      },
+    },
+    presentAddress: { type: String, required: true },
+    permanentAddress: { type: String, required: true },
+    gurdian: {
+      type: gurdianSchema,
+      required: true,
+    },
+    profileImage: { type: String },
+
+    admissionSemester :{
+      type : Schema.Types.ObjectId,
+      ref : 'AcademicSemester'
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
-  presentAddress: { type: String, required: true },
-  permanentAddress: { type: String, required: true },
-  gurdian:{
-    type : gurdianSchema,
-    required : true,
+  {
+    toJSON: {
+      virtuals: true,
+    },
   },
-  profileImage: { type: String },
-  isActive: {
-    type : String,
-    enum : ['active', 'blocked'],
-    default : 'active',
-  },
-  isDeleted : {
-    type : Boolean,
-    default : false,
-  }
-},{
-  toJSON: {
-    virtuals : true
-  }
+);
+
+studentSchema.virtual('fullname').get(function () {
+  return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`;
 });
 
-studentSchema.virtual('fullname').get(function (){
-  return (
-    `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`
-  )
-})
-
-const StudentModel = model<Student>('Student', studentSchema);
+const StudentModel = model<TStudent>('Student', studentSchema);
 
 export default StudentModel;
