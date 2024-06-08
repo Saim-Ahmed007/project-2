@@ -1,6 +1,10 @@
 import { Schema, model, connect } from 'mongoose';
 import { Gurdian, TStudent, UserName } from './student/student.interface';
 import validator from 'validator';
+import { strictObject } from 'zod';
+import { string } from 'joi';
+import AppError from '../app/errors/AppError';
+import httpStatus from 'http-status';
 
 const userNameSchema = new Schema<UserName>({
   firstName: {
@@ -63,10 +67,6 @@ const studentSchema = new Schema<TStudent>(
       type: String,
       required: true,
       unique: true,
-      // validate : {
-      //   validator: (value:string) => validator.isEmail(value),
-      //   message : '{VALUE} is not valid email'
-      // }
     },
     dateOfBirth: { type: Date },
     contactNo: { type: String, required: true },
@@ -90,6 +90,11 @@ const studentSchema = new Schema<TStudent>(
       type : Schema.Types.ObjectId,
       ref : 'AcademicSemester'
     },
+    academicDepartment : {
+      type : Schema.Types.ObjectId,
+      ref : 'AcademicDepartment'
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,
@@ -102,9 +107,20 @@ const studentSchema = new Schema<TStudent>(
   },
 );
 
+// studentSchema.pre('save', async function(next){
+//   const isStudentExist = await StudentModel.findOneAndUpdate({id : this.id})
+//   if(!isStudentExist){
+//     throw new AppError(httpStatus.NOT_FOUND, 'Student does not exist', '')
+//   }
+//   else{
+//     next()
+//   }
+// })
+
 studentSchema.virtual('fullname').get(function () {
-  return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`;
+  return `${this?.name?.firstName} ${this?.name?.middleName} ${this?.name?.lastName}`;
 });
+
 
 const StudentModel = model<TStudent>('Student', studentSchema);
 

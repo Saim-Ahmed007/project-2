@@ -13,7 +13,7 @@ const createStudent = catchAsync(async (req, res, next) => {
     success : true,
     message : 'Student is created successfully',
     data : result,
-  })
+  })  
 
 }) 
 

@@ -5,6 +5,9 @@ import { UserModel } from './user.model';
 import StudentModel from '../student.model';
 import { AcademicSemester } from '../academicSemester/academicSemester.model';
 import { generateStudentId } from './user.utils';
+import mongoose from 'mongoose';
+import httpStatus from 'http-status';
+import AppError from '../../app/errors/AppError';
 
 const createStudentIntoDB = async (password: string, payload: TStudent) => {
   //create user object
@@ -21,20 +24,46 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
     payload.admissionSemester,
   );
 
-  //set auto id
-  userData.id = await generateStudentId(admissionSemester);
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    //set auto id
+    userData.id = await generateStudentId(admissionSemester);
 
-  //create a user
-  const newUser = await UserModel.create(userData);
+    //create a user (transction-1)
+    // transction use er karone newUser array hoia jaibo
+    const newUser = await UserModel.create([userData], { session }); //array
 
-  //create a student
-  if (Object.keys(newUser).length) {
+    //create a user
+    if (!newUser.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user', '');
+    }
     //set id and _id as user
-    payload.id = newUser.id; //embedding id
-    payload.user = newUser._id; //refference _id
+    payload.id = newUser[0].id; //embedding id
+    payload.user = newUser[0]._id; //refference _id
 
-    const newStudent = StudentModel.create(payload);
+    //create a student (transction-2)
+    const newStudent = await StudentModel.create([payload], { session }); //array
+    if (!newStudent.length) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'Failed to create student',
+        '',
+      );
+    }
+
+    await session.commitTransaction();
+    await session.endSession();
+
     return newStudent;
+  } catch (error) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Failed to create student',
+      '',
+    )
   }
 };
 
