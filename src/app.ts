@@ -21,6 +21,8 @@ import { handleCastError } from './app/errors/handleCastError';
 import { handleDuplicateError } from './app/errors/handleDuplicateError';
 import AppError from './app/errors/AppError';
 import notFound from './app/middlewares/not found';
+import { FacultyRoutes } from './modules/Faculty/faculty.route';
+import { AdminRoutes } from './modules/Admin/admin.route';
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.use(express.json());
 
 //application routes
 app.use('/api/v1/students', StudentRoutes);
+app.use('/api/v1/faculties', FacultyRoutes);
+app.use('/api/v1/admins', AdminRoutes);
 app.use('/api/v1/users', UserRoutes);
 app.use('/api/v1/academic-semesters', academicSemesterRoutes);
 app.use('/api/v1/academic-faculties', AcademicFacultyRoutes);
