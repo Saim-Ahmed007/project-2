@@ -1,10 +1,10 @@
 import { Schema, model, connect } from 'mongoose';
-import { Gurdian, TStudent, UserName } from './student/student.interface';
+// import { Gurdian, TStudent, UserName } from './student/student.interface';
 import validator from 'validator';
 import { strictObject } from 'zod';
 import { string } from 'joi';
-import AppError from '../app/errors/AppError';
 import httpStatus from 'http-status';
+import { Gurdian, TStudent, UserName } from './student.interface';
 
 const userNameSchema = new Schema<UserName>({
   firstName: {

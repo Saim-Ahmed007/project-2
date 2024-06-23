@@ -1,11 +1,12 @@
 import { TStudent } from './student.interface';
-import StudentModel from './../student.model';
+
 import mongoose from 'mongoose';
 import AppError from '../../app/errors/AppError';
 import httpStatus from 'http-status';
 import { UserModel } from '../user/user.model';
 import QueryBuilder from '../../app/builder/QueryBuilder';
 import { searchableFields } from './student.constant';
+import StudentModel from './student.model';
 
 const getStudentsFromDB = async (query: Record<string, unknown> ) => {
 
@@ -89,7 +90,7 @@ const getStudentsFromDB = async (query: Record<string, unknown> ) => {
 };
 
 const getSingleStudentFromDB = async (id: string) => {
-  const result = await StudentModel.findOne({ id })
+  const result = await StudentModel.findById(id )
     .populate('admissionSemester')
     .populate({
       path: 'academicDepartment',
@@ -123,7 +124,7 @@ const updateStudentIntoDB = async (id: string, payload : Partial<TStudent>)=>{
     }
   }
   
-  const result = await StudentModel.findOneAndUpdate({id},modifiedStudentData, {
+  const result = await StudentModel.findByIdAndUpdate(id,modifiedStudentData, {
     new: true,
     runValidators: true
   })
@@ -134,8 +135,8 @@ const deleteStudentFromDB = async (id: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const deletedStudent = await StudentModel.findOneAndUpdate(
-      { id },
+    const deletedStudent = await StudentModel.findByIdAndUpdate(
+       id,
       { isDeleted: true },
       { new: true, session },
     );
@@ -147,8 +148,10 @@ const deleteStudentFromDB = async (id: string) => {
       );
     }
 
-    const deletedUser = await UserModel.findOneAndUpdate(
-      { id },
+    const userId = deletedStudent.user
+
+    const deletedUser = await UserModel.findByIdAndUpdate(
+      { userId },
       { isDeleted: true },
       { new: true, session },
     );

@@ -23,12 +23,12 @@ const getAllAdminsFromDB = async(query:Record<string, unknown>)=>{
 
 }
 
-const getSingleAdminFromDB = async(id:string)=>{
-    const result = await Admin.findById({id})
+const getSingleAdminFromDB = async(_id:string)=>{  //we use mongodb id 
+    const result = await Admin.findById({_id})
     return result
 }
 
-const updateAdminIntoDB = async(id:string, payload: Partial<TAdmin>)=>{
+const updateAdminIntoDB = async(_id:string, payload: Partial<TAdmin>)=>{
     const {name, ...remainingAdminData} = payload
     const modifiedUpdatedData: Record<string, unknown> = {...remainingAdminData}
 
@@ -37,18 +37,18 @@ const updateAdminIntoDB = async(id:string, payload: Partial<TAdmin>)=>{
             modifiedUpdatedData[`name.${key}`] = value
         }
     }
-    const result = await Admin.findByIdAndUpdate({id}, modifiedUpdatedData ,{
+    const result = await Admin.findByIdAndUpdate({_id}, modifiedUpdatedData ,{
         new:true,
         runValidators:true
     })
     return result
 }
 
-const deleteAdminFromDB = async(id:string)=>{
+const deleteAdminFromDB = async(_id:string)=>{
     const session = await mongoose.startSession()
     try{
         session.startTransaction()
-        const deletedAdmin = await Admin.findByIdAndUpdate(id,
+        const deletedAdmin = await Admin.findByIdAndUpdate(_id,
             {isDeleted:true},
             {new:true, session}
         )

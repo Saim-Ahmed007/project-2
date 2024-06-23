@@ -2,7 +2,7 @@ import config from '../../app/config';
 import { TStudent } from '../student/student.interface';
 import { TUser } from './user.interface';
 import { UserModel } from './user.model';
-import StudentModel from '../student.model';
+
 import { AcademicSemester } from '../academicSemester/academicSemester.model';
 import { generateAdminId, generateFacultyId, generateStudentId } from './user.utils';
 import mongoose from 'mongoose';
@@ -13,6 +13,7 @@ import { AcademicDepartment } from '../academicDepartment/academicDepartment.mod
 import { Faculty } from '../Faculty/faculty.model';
 import { TAdmin } from '../Admin/admin.interface';
 import { Admin } from '../Admin/admin.model';
+import StudentModel from '../student/student.model';
 
 const createStudentIntoDB = async (password: string, payload: TStudent) => {
   //create user object
@@ -163,8 +164,8 @@ const createAdminIntoDB = async(password: string, payload: TAdmin)=>{
     }
 
     //set id and _id as user
-    payload.id = newUser[0].id
-    payload.user = newUser[0]._id
+    payload.id = newUser[0].id  //embedding id
+    payload.user = newUser[0]._id //referencing id
 
     //create admin transction-2
     const newAdmin = await Admin.create([payload], {session})
