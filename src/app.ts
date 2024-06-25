@@ -26,6 +26,7 @@ import { AdminRoutes } from './modules/Admin/admin.route';
 import { StudentRoutes } from './modules/student/student.route';
 import { CourseRoutes } from './modules/Course/course.router';
 import { semesterRegistrationRoutes } from './modules/semesterRegistration/semesterRegistration.route';
+import { OfferedCourseRoutes } from './modules/OfferedCourse/offeredCourse.route';
 
 const app = express();
 
@@ -44,6 +45,8 @@ app.use('/api/v1/academic-faculties', AcademicFacultyRoutes);
 app.use('/api/v1/academic-departments', AcademicDepartmentRoutes);
 app.use('/api/v1/courses', CourseRoutes);
 app.use('/api/v1/semseter-registrations', semesterRegistrationRoutes);
+app.use('/api/v1/offered-courses', OfferedCourseRoutes);
+
 
 //global error handler
 const globalErrorHandler: ErrorRequestHandler = (
