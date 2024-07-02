@@ -1,10 +1,14 @@
 import config from '../../app/config';
 import { TStudent } from '../student/student.interface';
 import { TUser } from './user.interface';
-import { UserModel } from './user.model';
+import { User } from './user.model';
 
 import { AcademicSemester } from '../academicSemester/academicSemester.model';
-import { generateAdminId, generateFacultyId, generateStudentId } from './user.utils';
+import {
+  generateAdminId,
+  generateFacultyId,
+  generateStudentId,
+} from './user.utils';
 import mongoose from 'mongoose';
 import httpStatus from 'http-status';
 import AppError from '../../app/errors/AppError';
@@ -38,7 +42,7 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
 
     //create a user (transction-1)
     // transction use er karone newUser array hoia jaibo
-    const newUser = await UserModel.create([userData], { session }); //array
+    const newUser = await User.create([userData], { session }); //array
 
     //create a user
     if (!newUser.length) {
@@ -65,45 +69,41 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'Failed to create student',
-      '',
-    )
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create student', '');
   }
 };
 
-
 //create faculty
-const createFacultyIntoDB = async(password: string, payload: TFaculty)=>{
-
+const createFacultyIntoDB = async (password: string, payload: TFaculty) => {
   //create user object
-  const userData : Partial<TUser> = {}
+  const userData: Partial<TUser> = {};
 
   //if password is not given use default password
-  userData.password = password || (config.default_password as string)
+  userData.password = password || (config.default_password as string);
 
-  //set role 
-  userData.role = 'faculty'
+  //set role
+  userData.role = 'faculty';
 
   //find academicDepartment info
-  const academicDepartment = await AcademicDepartment.findById(payload.academicDepartment)
+  const academicDepartment = await AcademicDepartment.findById(
+    payload.academicDepartment,
+  );
 
   if (!academicDepartment) {
     throw new AppError(400, 'Academic department not found', '');
   }
 
-  const session = await mongoose.startSession()
+  const session = await mongoose.startSession();
 
-  try{
-    session.startTransaction()
+  try {
+    session.startTransaction();
 
     //set auto generated id
     userData.id = await generateFacultyId();
 
     //create a user (transction-1)
     // transction use er karone newUser array hoia jaibo
-    const newUser = await UserModel.create([userData], {session})
+    const newUser = await User.create([userData], { session });
 
     if (!newUser.length) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user', '');
@@ -122,69 +122,64 @@ const createFacultyIntoDB = async(password: string, payload: TFaculty)=>{
         '',
       );
     }
-    await session.commitTransaction()
-    await session.endSession()
-    return newFaculty
-
-  }catch(error:any){
-
-    await session.abortTransaction()
-    await session.endSession()
-    throw new Error(error)
-
+    await session.commitTransaction();
+    await session.endSession();
+    return newFaculty;
+  } catch (error: any) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new Error(error);
   }
-}
+};
 
 //create Admin
-const createAdminIntoDB = async(password: string, payload: TAdmin)=>{
-
+const createAdminIntoDB = async (password: string, payload: TAdmin) => {
   //create user object
-  const userData:Partial<TUser> = {}
+  const userData: Partial<TUser> = {};
 
   //if password is not given use default password
-  userData.password = password || (config.default_password as string)
+  userData.password = password || (config.default_password as string);
 
   //set admin role
-  userData.role = 'admin'
+  userData.role = 'admin';
 
   //start session
-  const session = await mongoose.startSession()
-  try{
-    session.startTransaction()
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
 
     //set generated id
     userData.id = await generateAdminId();
 
     //create user transction-1
-    const newUser = await UserModel.create([userData], {session})
+    const newUser = await User.create([userData], { session });
 
     //create a admin
-    if(!newUser.length){
-      throw new AppError(httpStatus.BAD_REQUEST, "failed to create admin", '')
+    if (!newUser.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'failed to create admin', '');
     }
 
     //set id and _id as user
-    payload.id = newUser[0].id  //embedding id
-    payload.user = newUser[0]._id //referencing id
+    payload.id = newUser[0].id; //embedding id
+    payload.user = newUser[0]._id; //referencing id
 
     //create admin transction-2
-    const newAdmin = await Admin.create([payload], {session})
+    const newAdmin = await Admin.create([payload], { session });
 
     if (!newAdmin.length) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create admin', '');
     }
 
-    await session.commitTransaction()
-    await session.endSession()
+    await session.commitTransaction();
+    await session.endSession();
 
-    return newAdmin
-
-  }catch(error :any){
-    await session.abortTransaction()
-    await session.endSession()
-    throw new Error(error)
+    return newAdmin;
+  } catch (error: any) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new Error(error);
   }
-}
+};
 
 export const UserServices = {
   createStudentIntoDB,

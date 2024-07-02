@@ -27,11 +27,14 @@ import { StudentRoutes } from './modules/student/student.route';
 import { CourseRoutes } from './modules/Course/course.router';
 import { semesterRegistrationRoutes } from './modules/semesterRegistration/semesterRegistration.route';
 import { OfferedCourseRoutes } from './modules/OfferedCourse/offeredCourse.route';
+import { AuthRoutes } from './modules/Auth/auth.route';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
 // parsers
-app.use(cors());
+app.use(cors({origin: ['http://localhost:5173']}));
+app.use(cookieParser())
 app.use(express.json());
 
 
@@ -46,6 +49,7 @@ app.use('/api/v1/academic-departments', AcademicDepartmentRoutes);
 app.use('/api/v1/courses', CourseRoutes);
 app.use('/api/v1/semseter-registrations', semesterRegistrationRoutes);
 app.use('/api/v1/offered-courses', OfferedCourseRoutes);
+app.use('/api/v1/auth', AuthRoutes);
 
 
 //global error handler

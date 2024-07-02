@@ -3,16 +3,15 @@ import { TStudent } from './student.interface';
 import mongoose from 'mongoose';
 import AppError from '../../app/errors/AppError';
 import httpStatus from 'http-status';
-import { UserModel } from '../user/user.model';
+import { User } from '../user/user.model';
 import QueryBuilder from '../../app/builder/QueryBuilder';
 import { searchableFields } from './student.constant';
 import StudentModel from './student.model';
 
-const getStudentsFromDB = async (query: Record<string, unknown> ) => {
-
+const getStudentsFromDB = async (query: Record<string, unknown>) => {
   //{email : {$regex : query.searchTerm, $options : i}}
   // const searchableFields = ['email', 'name.firstname', 'presentAddress']
-  
+
   // const queryObj = {...query} //copy
   // let searchTerm = '';
   // if(query?.searchTerm){
@@ -24,7 +23,7 @@ const getStudentsFromDB = async (query: Record<string, unknown> ) => {
   //   }))
   // })
 
-  // //filtering 
+  // //filtering
   // const excludeFields = ['searchTerm', 'sort', 'limit','page','fields']
   // excludeFields.forEach((el)=> delete queryObj[el])
 
@@ -43,15 +42,14 @@ const getStudentsFromDB = async (query: Record<string, unknown> ) => {
   //   }
   //   const sortQuery =  filterQuery.sort(sort)
 
-   
   //   //paginate query
   //   let limit = 1
   //   let page = 1
   //   let skip = 0
   //   if(query.limit){
-  //     limit = Number(query.limit) 
+  //     limit = Number(query.limit)
   //   }
-    
+
   //   if(query.page){
   //     page = Number(query.page)
   //     skip = (page-1)*limit
@@ -70,27 +68,30 @@ const getStudentsFromDB = async (query: Record<string, unknown> ) => {
   //   }
   //   const fieldQuery = await limitQuery.select(fields)
 
-
   // return fieldQuery;
-  const studentQuery = new QueryBuilder(StudentModel.find()
-  .populate('admissionSemester')
-    .populate({
-      path: 'academicDepartment',
-      populate: {
-        path: 'academicfaculty',
-      },
-    }), query).
-  search(searchableFields)
-  .filter()
-  .paginate()
+  const studentQuery = new QueryBuilder(
+    StudentModel.find()
+      .populate('user')
+      .populate('admissionSemester')
+      .populate({
+        path: 'academicDepartment',
+        populate: {
+          path: 'academicfaculty',
+        },
+      }),
+    query,
+  )
+    .search(searchableFields)
+    .filter()
+    .paginate();
   // .fields()
 
-  const result = await studentQuery.modelQuery
-  return result
+  const result = await studentQuery.modelQuery;
+  return result;
 };
 
 const getSingleStudentFromDB = async (id: string) => {
-  const result = await StudentModel.findById(id )
+  const result = await StudentModel.findById(id)
     .populate('admissionSemester')
     .populate({
       path: 'academicDepartment',
@@ -102,41 +103,42 @@ const getSingleStudentFromDB = async (id: string) => {
   return result;
 };
 
-const updateStudentIntoDB = async (id: string, payload : Partial<TStudent>)=>{
-
-  const {name, gurdian, ...remainingStudentData} = payload
-  const modifiedStudentData : Record<string, unknown> = {...remainingStudentData} 
+const updateStudentIntoDB = async (id: string, payload: Partial<TStudent>) => {
+  const { name, gurdian, ...remainingStudentData } = payload;
+  const modifiedStudentData: Record<string, unknown> = {
+    ...remainingStudentData,
+  };
 
   /*
   to update non premmitive property 
   name.lastName = 'ahmed' name = keys
   */
 
-  if(name && Object.keys(name).length){
-    for(const[key, value] of Object.entries(name)){
-      modifiedStudentData[`name.${key}`] = value
+  if (name && Object.keys(name).length) {
+    for (const [key, value] of Object.entries(name)) {
+      modifiedStudentData[`name.${key}`] = value;
     }
   }
-  
-  if(gurdian && Object.keys(gurdian).length){
-    for(const[key, value] of Object.entries(gurdian)){
-      modifiedStudentData[`gurdian.${key}`] = value
+
+  if (gurdian && Object.keys(gurdian).length) {
+    for (const [key, value] of Object.entries(gurdian)) {
+      modifiedStudentData[`gurdian.${key}`] = value;
     }
   }
-  
-  const result = await StudentModel.findByIdAndUpdate(id,modifiedStudentData, {
+
+  const result = await StudentModel.findByIdAndUpdate(id, modifiedStudentData, {
     new: true,
-    runValidators: true
-  })
-  return result
-}
+    runValidators: true,
+  });
+  return result;
+};
 
 const deleteStudentFromDB = async (id: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
     const deletedStudent = await StudentModel.findByIdAndUpdate(
-       id,
+      id,
       { isDeleted: true },
       { new: true, session },
     );
@@ -148,9 +150,9 @@ const deleteStudentFromDB = async (id: string) => {
       );
     }
 
-    const userId = deletedStudent.user
+    const userId = deletedStudent.user;
 
-    const deletedUser = await UserModel.findByIdAndUpdate(
+    const deletedUser = await User.findByIdAndUpdate(
       { userId },
       { isDeleted: true },
       { new: true, session },
@@ -159,26 +161,22 @@ const deleteStudentFromDB = async (id: string) => {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to delete user', '');
     }
 
-    await session.commitTransaction()
-    await session.endSession()
+    await session.commitTransaction();
+    await session.endSession();
 
     return deletedStudent;
-    
   } catch (error) {
-    await session.abortTransaction()
-    await session.endSession()
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'Failed to delete student',
-      '',
-    )
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to delete student', '');
   }
 };
+
+
 
 export const StudentServices = {
   getStudentsFromDB,
   getSingleStudentFromDB,
   updateStudentIntoDB,
   deleteStudentFromDB,
-  
 };
